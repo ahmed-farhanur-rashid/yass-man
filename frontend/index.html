@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>YASS-MAN</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&family=Syne:wght@700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ── Home state ─────────────────────────────────────────────── -->
+  <div id="home-view" class="home-view">
+    <header class="home-header">
+      <div class="logo-lockup">
+        <span class="logo-mark">Y</span>
+        <div class="logo-text">
+          <span class="logo-name">YASS-MAN</span>
+          <span class="logo-sub">Yet Another SearXNG Search Meta AI Network</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="search-hero">
+      <form class="search-form" id="home-form" autocomplete="off">
+        <div class="search-input-wrap">
+          <svg class="search-icon" viewBox="0 0 20 20" fill="none">
+            <circle cx="8.5" cy="8.5" r="5.5" stroke="currentColor" stroke-width="1.5"/>
+            <path d="M13.5 13.5L17 17" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+          <input
+            id="home-query"
+            class="search-input"
+            type="text"
+            placeholder="Ask anything…"
+            autocomplete="off"
+            spellcheck="false"
+            autofocus
+          />
+          <kbd class="search-hint">Enter</kbd>
+        </div>
+      </form>
+      <p class="home-tagline">Private · Local · Smarter</p>
+    </div>
+  </div>
+
+  <!-- ── Results state ──────────────────────────────────────────── -->
+  <div id="results-view" class="results-view hidden">
+
+    <!-- Sticky top bar -->
+    <nav class="results-nav">
+      <button class="nav-logo" id="nav-logo-btn" aria-label="New search">
+        <span class="logo-mark small">Y</span>
+        <span class="nav-brand">YASS-MAN</span>
+      </button>
+
+      <form class="nav-search-form" id="nav-form" autocomplete="off">
+        <div class="nav-search-wrap">
+          <svg class="nav-search-icon" viewBox="0 0 20 20" fill="none">
+            <circle cx="8.5" cy="8.5" r="5.5" stroke="currentColor" stroke-width="1.5"/>
+            <path d="M13.5 13.5L17 17" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+          <input
+            id="nav-query"
+            class="nav-search-input"
+            type="text"
+            placeholder="Search…"
+            autocomplete="off"
+            spellcheck="false"
+          />
+        </div>
+      </form>
+    </nav>
+
+    <!-- Content -->
+    <main class="results-main">
+
+      <!-- Loading state -->
+      <div id="loading-state" class="loading-state hidden">
+        <div class="loading-bar-track">
+          <div class="loading-bar-fill" id="loading-bar"></div>
+        </div>
+        <div class="loading-stages" id="loading-stages">
+          <span class="stage active" data-stage="router">Routing</span>
+          <span class="stage-sep">→</span>
+          <span class="stage" data-stage="expand">Expanding</span>
+          <span class="stage-sep">→</span>
+          <span class="stage" data-stage="search">Searching</span>
+          <span class="stage-sep">→</span>
+          <span class="stage" data-stage="rank">Ranking</span>
+          <span class="stage-sep">→</span>
+          <span class="stage" data-stage="synth">Synthesizing</span>
+        </div>
+      </div>
+
+      <!-- Error state -->
+      <div id="error-state" class="error-state hidden">
+        <div class="error-icon">⚠</div>
+        <p id="error-message" class="error-message">Something went wrong.</p>
+        <button class="btn-retry" id="btn-retry">Try again</button>
+      </div>
+
+      <!-- Empty state -->
+      <div id="empty-state" class="empty-state hidden">
+        <p>No results found. Try rephrasing your query.</p>
+      </div>
+
+      <!-- Answer box (LLM synthesis) -->
+      <section id="answer-section" class="answer-section hidden">
+        <div class="answer-header">
+          <span class="answer-badge">
+            <svg viewBox="0 0 16 16" fill="none" width="12" height="12">
+              <path d="M8 1L10 6H15L11 9.5L12.5 15L8 11.5L3.5 15L5 9.5L1 6H6L8 1Z" fill="currentColor"/>
+            </svg>
+            AI Answer
+          </span>
+        </div>
+        <div id="answer-text" class="answer-text"></div>
+        <div id="citations-list" class="citations-list"></div>
+      </section>
+
+      <!-- Expanded queries -->
+      <details id="expanded-queries" class="expanded-queries hidden">
+        <summary class="expanded-summary">
+          <span class="expanded-label">Expanded queries</span>
+          <span id="expanded-count" class="expanded-count"></span>
+        </summary>
+        <ul id="expanded-list" class="expanded-list"></ul>
+      </details>
+
+      <!-- Results -->
+      <div id="results-list" class="results-list"></div>
+
+      <!-- Footer latency -->
+      <footer id="latency-footer" class="latency-footer hidden">
+        <span class="latency-label">Pipeline latency</span>
+        <div id="latency-stages" class="latency-stages"></div>
+      </footer>
+
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

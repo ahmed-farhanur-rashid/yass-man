@@ -1,0 +1,35 @@
+# ── Web framework ─────────────────────────────────────────────────────────────
+fastapi>=0.111.0
+uvicorn[standard]>=0.29.0
+httpx>=0.27.0
+python-multipart>=0.0.9
+
+# ── Config / env ──────────────────────────────────────────────────────────────
+pydantic>=2.7.0
+pydantic-settings>=2.2.0
+python-dotenv>=1.0.0
+pyyaml>=6.0.1
+
+# ── ML / embeddings ───────────────────────────────────────────────────────────
+torch>=2.2.0
+transformers>=4.40.0
+sentence-transformers>=2.7.0
+numpy>=1.26.0
+scikit-learn>=1.4.0
+
+# ── HuggingFace downloads ─────────────────────────────────────────────────────
+huggingface_hub>=0.22.0
+
+# ── LLM (GGUF) ────────────────────────────────────────────────────────────────
+# Install a pre-built wheel from https://github.com/abetlen/llama-cpp-python/releases
+# if pip install fails (especially on Windows):
+#   pip install llama-cpp-python --extra-index-url https://abetlen.github.io/llama-cpp-python/whl/cpu
+llama-cpp-python>=0.2.57
+
+# ── Utilities ─────────────────────────────────────────────────────────────────
+tqdm>=4.66.0
+requests>=2.31.0
+
+# ── Dev / test ────────────────────────────────────────────────────────────────
+pytest>=8.1.0
+pytest-asyncio>=0.23.0
