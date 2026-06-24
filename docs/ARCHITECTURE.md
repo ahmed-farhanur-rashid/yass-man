@@ -23,7 +23,7 @@ User query (string)
 └─────────────┘   intent, num_expansions, strategy               │
        │                                                         │
        ▼                                                         │
-┌─────────────┐   list[str]  (original + up to 4 variants)      │
+┌─────────────┐   list[str]  (original + up to 4 variants)       │
 │   Expander  │                                                  │
 └─────────────┘                                                  │
        │                                                         │
