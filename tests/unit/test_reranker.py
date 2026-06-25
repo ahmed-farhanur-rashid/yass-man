@@ -92,3 +92,15 @@ def test_rerank_preserves_metadata(stage):
     )
     assert ranked[0].title == "Example Title"
     assert ranked[0].url == "https://example.com"
+
+
+def test_rerank_passes_through_query_sources(stage):
+    results = [
+        AggregatedResult(
+            title="A", snippet="snippet a", url="https://a.com/",
+            normalized_url="https://a.com/",
+            query_sources=["original query", "expanded query"],
+        )
+    ]
+    ranked = asyncio.run(stage.rerank("test query", results))
+    assert ranked[0].query_sources == ["original query", "expanded query"]

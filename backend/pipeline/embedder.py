@@ -15,8 +15,6 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import Optional
-
 import numpy as np
 
 from backend.cache.embedding_cache import EmbeddingCache

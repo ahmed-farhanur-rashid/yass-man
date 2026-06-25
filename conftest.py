@@ -1,9 +1,8 @@
 """
-Shared pytest fixtures available across all test modules.
+Shared pytest fixtures.
 
-Model-heavy fixtures (embedder, reranker, llm) are NOT loaded here by default
-to keep the unit test suite fast. Integration tests that need them should
-import or mock them directly.
+Lightweight only — no ML model loading. Tests that need mocked models
+build them inline to keep dependencies explicit.
 """
 
 from __future__ import annotations
@@ -11,19 +10,11 @@ from __future__ import annotations
 import pytest
 
 from backend.cache.embedding_cache import EmbeddingCache
-from backend.model_config_loader import (
-    EmbedderConfig,
-    LLMConfig,
-    PipelineConfig,
-    RerankerConfig,
-    RouterConfig,
-)
+from backend.cache.result_cache import ResultCache
+from backend.model_config_loader import PipelineConfig, RerankerConfig, RouterConfig
 from backend.pipeline.aggregator import Aggregator
 from backend.pipeline.expander import QueryExpander
 from backend.pipeline.router import QueryRouter
-
-
-# ── Config fixtures ───────────────────────────────────────────────────────────
 
 
 @pytest.fixture(scope="session")
@@ -39,20 +30,6 @@ def pipeline_config() -> PipelineConfig:
         dedup_similarity_threshold=0.92,
         embedding_cache=True,
     )
-
-
-@pytest.fixture(scope="session")
-def reranker_config() -> RerankerConfig:
-    return RerankerConfig(
-        model="bge-reranker-base",
-        source="huggingface",
-        repo="BAAI/bge-reranker-base",
-        backend="pytorch",
-        top_k=10,
-    )
-
-
-# ── Pipeline component fixtures ───────────────────────────────────────────────
 
 
 @pytest.fixture(scope="session")
@@ -72,5 +49,11 @@ def aggregator() -> Aggregator:
 
 @pytest.fixture
 def embedding_cache() -> EmbeddingCache:
-    """Fresh cache per test (function scope)."""
+    """Fresh cache per test."""
     return EmbeddingCache()
+
+
+@pytest.fixture
+def result_cache() -> ResultCache:
+    """Fresh result cache per test."""
+    return ResultCache()

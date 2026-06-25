@@ -8,7 +8,7 @@ This file only holds runtime settings: URLs, paths, feature flags, pipeline tuni
 from functools import lru_cache
 from pathlib import Path
 
-from pydantic import AnyHttpUrl, field_validator
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -32,11 +32,6 @@ class Settings(BaseSettings):
     enable_llm: bool = True
     enable_clustering: bool = True
     enable_feedback: bool = True
-
-    # ── Pipeline ──────────────────────────────────────────────────────────────
-    top_k_results: int = 10
-    max_expanded_queries: int = 5
-    search_timeout_seconds: float = 2.0
 
     # ── Server ────────────────────────────────────────────────────────────────
     host: str = "127.0.0.1"

@@ -15,7 +15,7 @@ from typing import Optional
 from backend.model_config_loader import LLMConfig
 from backend.models.llm_model import LLMModel
 from backend.schemas.result import Citation, RankedResult, SynthesisResult
-from backend.utils.text_utils import truncate_for_prompt
+from backend.utils.text_utils import clean_snippet
 
 logger = logging.getLogger(__name__)
 
@@ -89,7 +89,7 @@ class Synthesizer:
 
     def _build_prompt(self, query: str, results: list[RankedResult]) -> str:
         sources_block = "\n\n".join(
-            f"[{i + 1}] {r.title}\n{truncate_for_prompt(r.snippet, 400)}"
+            f"[{i + 1}] {r.title}\n{clean_snippet(r.snippet, 400)}"
             for i, r in enumerate(results)
         )
         return (

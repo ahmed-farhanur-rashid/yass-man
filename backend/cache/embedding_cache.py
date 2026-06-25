@@ -1,14 +1,13 @@
 """
 Embedding Cache — Phase 5.
 
-In-memory cache for computed embeddings, keyed by sha256(url).
+In-memory cache for computed embeddings, keyed by normalized URL.
 Embeddings are deterministic so no TTL is needed.
 Thread-safe for asyncio (single-threaded event loop).
 """
 
 from __future__ import annotations
 
-import hashlib
 import logging
 from typing import Optional
 
@@ -25,12 +24,8 @@ class EmbeddingCache:
         self._hits = 0
         self._misses = 0
 
-    def _key(self, url: str) -> str:
-        return hashlib.sha256(url.encode("utf-8")).hexdigest()
-
     def get(self, url: str) -> Optional[np.ndarray]:
-        key = self._key(url)
-        embedding = self._cache.get(key)
+        embedding = self._cache.get(url)
         if embedding is not None:
             self._hits += 1
             return embedding
@@ -38,8 +33,7 @@ class EmbeddingCache:
         return None
 
     def set(self, url: str, embedding: np.ndarray) -> None:
-        key = self._key(url)
-        self._cache[key] = embedding
+        self._cache[url] = embedding
 
     def clear(self) -> None:
         self._cache.clear()

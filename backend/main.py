@@ -13,26 +13,15 @@ import uuid
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Optional
+from typing import Annotated, Optional
 
 import httpx
-from fastapi import Depends, FastAPI, HTTPException, Query
+from fastapi import Depends, FastAPI, HTTPException, Query, Request
 from fastapi.staticfiles import StaticFiles
 
 from backend.cache.embedding_cache import EmbeddingCache
+from backend.cache.result_cache import ResultCache
 from backend.config import Settings, get_settings
-from backend.dependencies import (
-    get_aggregator,
-    get_embedder_stage,
-    get_expander,
-    get_feedback_logger,
-    get_model_config,
-    get_query_logger,
-    get_retriever,
-    get_reranker_stage,
-    get_router,
-    get_synthesizer,
-)
 from backend.logging.feedback import FeedbackLogger
 from backend.logging.query_logger import QueryLogger
 from backend.model_config_loader import ModelConfig, load_model_config
@@ -60,6 +49,40 @@ logging.basicConfig(
     datefmt="%H:%M:%S",
 )
 logger = logging.getLogger(__name__)
+
+
+# ── Dependency helpers (inlined — all are single app.state lookups) ───────────
+
+def _get_router(req: Request) -> QueryRouter:
+    return req.app.state.query_router
+
+def _get_expander(req: Request) -> QueryExpander:
+    return req.app.state.query_expander
+
+def _get_retriever(req: Request) -> Retriever:
+    return req.app.state.retriever
+
+def _get_aggregator(req: Request) -> Aggregator:
+    return req.app.state.aggregator
+
+def _get_embedder_stage(req: Request) -> EmbedderStage:
+    return req.app.state.embedder_stage
+
+def _get_reranker_stage(req: Request) -> RerankerStage:
+    return req.app.state.reranker_stage
+
+def _get_synthesizer(req: Request) -> Optional[Synthesizer]:
+    return getattr(req.app.state, "synthesizer", None)
+
+def _get_query_logger(req: Request) -> QueryLogger:
+    return req.app.state.query_logger
+
+def _get_feedback_logger(req: Request) -> FeedbackLogger:
+    return req.app.state.feedback_logger
+
+
+def _get_result_cache(req: Request) -> ResultCache:
+    return req.app.state.result_cache
 
 
 # ── Lifespan ──────────────────────────────────────────────────────────────────
@@ -106,6 +129,9 @@ async def lifespan(app: FastAPI):
     # ── Assemble pipeline components ──────────────────────────────────────────
     embedding_cache = EmbeddingCache()
     app.state.embedding_cache = embedding_cache
+
+    result_cache = ResultCache()
+    app.state.result_cache = result_cache
 
     app.state.query_router = QueryRouter(model_cfg.router)
     app.state.query_expander = QueryExpander(model_cfg.pipeline)
@@ -161,15 +187,21 @@ app = FastAPI(
 async def search(
     q: str = Query(..., min_length=1, max_length=500, description="Search query"),
     request_top_k: int = Query(default=10, alias="top_k", ge=1, le=50),
-    router: QueryRouter = Depends(get_router),
-    expander: QueryExpander = Depends(get_expander),
-    retriever: Retriever = Depends(get_retriever),
-    aggregator: Aggregator = Depends(get_aggregator),
-    embedder_stage: EmbedderStage = Depends(get_embedder_stage),
-    reranker_stage: RerankerStage = Depends(get_reranker_stage),
-    synthesizer: Optional[Synthesizer] = Depends(get_synthesizer),
-    query_logger: QueryLogger = Depends(get_query_logger),
+    router: Annotated[QueryRouter, Depends(_get_router)] = None,
+    expander: Annotated[QueryExpander, Depends(_get_expander)] = None,
+    retriever: Annotated[Retriever, Depends(_get_retriever)] = None,
+    aggregator: Annotated[Aggregator, Depends(_get_aggregator)] = None,
+    embedder_stage: Annotated[EmbedderStage, Depends(_get_embedder_stage)] = None,
+    reranker_stage: Annotated[RerankerStage, Depends(_get_reranker_stage)] = None,
+    synthesizer: Annotated[Optional[Synthesizer], Depends(_get_synthesizer)] = None,
+    query_logger: Annotated[QueryLogger, Depends(_get_query_logger)] = None,
+    result_cache: Annotated[ResultCache, Depends(_get_result_cache)] = None,
 ) -> SearchResponse:
+    # ── Cache lookup ──────────────────────────────────────────────────────────
+    cached = result_cache.get(q)
+    if cached is not None:
+        return cached
+
     query_id = str(uuid.uuid4())
     t_total_start = time.perf_counter()
     latency: dict[str, float] = {}
@@ -231,7 +263,7 @@ async def search(
         latency_ms=latency,
     )
 
-    return SearchResponse(
+    response = SearchResponse(
         query_id=query_id,
         query=q,
         expanded_queries=expanded_queries,
@@ -240,12 +272,14 @@ async def search(
         results=ranked[:request_top_k],
         latency_ms=LatencyBreakdown(**latency),
     )
+    result_cache.set(q, response)
+    return response
 
 
 @app.post("/feedback", status_code=200)
 async def feedback(
     body: FeedbackRequest,
-    feedback_logger: FeedbackLogger = Depends(get_feedback_logger),
+    feedback_logger: Annotated[FeedbackLogger, Depends(_get_feedback_logger)] = None,
 ) -> dict:
     if not app.state.settings.enable_feedback:
         raise HTTPException(status_code=404, detail="Feedback is disabled")
@@ -260,7 +294,7 @@ async def feedback(
 @app.post("/click", status_code=200)
 async def click(
     body: ClickRequest,
-    feedback_logger: FeedbackLogger = Depends(get_feedback_logger),
+    feedback_logger: Annotated[FeedbackLogger, Depends(_get_feedback_logger)] = None,
 ) -> dict:
     feedback_logger.log_click(
         query_id=body.query_id,
@@ -303,8 +337,6 @@ async def health() -> HealthResponse:
         llm=model_cfg.llm.model if llm_model else None,
         llm_enabled=llm_model is not None,
     )
-
-
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────

@@ -18,9 +18,6 @@ def clean_snippet(text: str, max_length: int = 500) -> str:
     if not text:
         return ""
 
-    # Collapse whitespace
-    text = re.sub(r"\s+", " ", text).strip()
-
     # Strip basic HTML tags that sneak through
     text = re.sub(r"<[^>]+>", "", text)
 
@@ -33,6 +30,9 @@ def clean_snippet(text: str, max_length: int = 500) -> str:
         .replace("&#39;", "'")
         .replace("&nbsp;", " ")
     )
+
+    # Collapse whitespace after tag removal and entity decoding
+    text = re.sub(r"\s+", " ", text).strip()
 
     if len(text) <= max_length:
         return text
@@ -91,7 +91,3 @@ def _split_sentences(text: str) -> list[str]:
     """Rough sentence splitter on period / exclamation / question mark."""
     return re.split(r"(?<=[.!?])\s+", text)
 
-
-def truncate_for_prompt(text: str, max_chars: int = 400) -> str:
-    """Truncate text to fit inside an LLM prompt context."""
-    return clean_snippet(text, max_chars)

@@ -68,16 +68,10 @@ class RerankerConfig:
 @dataclass
 class RouterConfig:
     mode: str = "rule-based"
-    model: Optional[str] = None
-    repo: Optional[str] = None
 
     @classmethod
     def from_dict(cls, d: dict) -> "RouterConfig":
-        return cls(
-            mode=d.get("mode", "rule-based"),
-            model=d.get("model"),
-            repo=d.get("repo"),
-        )
+        return cls(mode=d.get("mode", "rule-based"))
 
 
 @dataclass
@@ -93,7 +87,6 @@ class LLMConfig:
     n_threads: Optional[int] = None
     max_sources_in_prompt: int = 8
     require_citations: bool = True
-    resolve_contradictions: bool = True
 
     @classmethod
     def from_dict(cls, d: dict) -> "LLMConfig":
@@ -110,7 +103,6 @@ class LLMConfig:
             n_threads=d.get("n_threads"),
             max_sources_in_prompt=d.get("max_sources_in_prompt", 8),
             require_citations=d.get("require_citations", True),
-            resolve_contradictions=d.get("resolve_contradictions", True),
         )
 
 

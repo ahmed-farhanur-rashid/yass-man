@@ -20,9 +20,6 @@ from backend.utils.text_utils import clean_snippet
 
 logger = logging.getLogger(__name__)
 
-_SEARXNG_RESULT_KEYS = ("title", "url", "content")  # SearXNG JSON field names
-
-
 class Retriever:
     """
     Async SearXNG interface.
